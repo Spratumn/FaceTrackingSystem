@@ -5,7 +5,7 @@ class Configs(object):
 
     def __init__(self):
         """ Sever or Local """
-        self.S_or_L = 'S'    # running on sever or local environment. 's' or 'S': sever, 'l' or 'L': local
+        self.S_or_L = 'L'    # running on sever or local environment. 's' or 'S': sever, 'l' or 'L': local
         self.VID_NAME = 'data/demo.mp4'
         self.VID_SAVING_NAME = 'save_video'
         self.VID_SAVING_BLOB_NAME = 'VID_SAVING_BLOB_NAME'
@@ -36,12 +36,12 @@ class Configs(object):
         # it's better to set to ratio of bboxes cause smaller ones means shorter dist and vice versa.
         self.MAX_PIXELS_DIST_BETWEEN_PREDICTED_AND_DETECTED = 45
         # detect per NUM_JUMP_FRAMES frames. D, N, N, N, D, N, ...
-        self.NUM_JUMP_FRAMES = 5
+        self.NUM_JUMP_FRAMES = 10
         self.VELOCITY_DIRECTION_SEPARATOR = 90
         """
         # Instance Parameters
         """
-        self.FILTER = 'Kalmen'
+        self.FILTER = 'KCF'
         # An instance will be deleted if we cannot detected it after this number
         self.MAX_NUM_MISSING_PERMISSION = self.NUM_JUMP_FRAMES+1
         # An instance will be showed if we  detected it more than this number

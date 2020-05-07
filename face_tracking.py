@@ -4,7 +4,7 @@ import os
 from config import Configs
 from models.faceboxes.inference import build_net, get_face_boxes
 from utils.video_helper import VideoHelper
-from tracker.multiple_object_controller import MultipleObjectController
+from tracker.multi_object_controller import MultiObjectController
 from utils.get_ID_emotion import get_face_ID
 from utils.visualizer import Visualizer
 
@@ -31,7 +31,7 @@ def run():
     net, prior_data = build_net((im_height, im_width), device='cpu')
 
     # object controller: objects are managed in this class
-    object_controller = MultipleObjectController(configs, video_helper)
+    object_controller = MultiObjectController(configs, video_helper)
     print("Pre Time: ", (time.time() - start_pre) * 1000, " ms")
 
     # step 2: main loop
@@ -50,7 +50,7 @@ def run():
             detects = get_face_boxes(net, prior_data, frame, configs.FRAME_RESIZE, cur_frame_counter)
             time_spend_of_detection = time.time() - start_turn
 
-            object_controller.update(detects, cur_frame_counter, frame)
+            object_controller.update_with_detection(detects, frame)
             get_face_ID(configs, frame, object_controller.instances, cur_frame_counter)
             time_spend_of_tracking = time.time() - start_turn - time_spend_of_detection
             print("Detecting Time: ", time_spend_of_detection * 1000, " ms.")
@@ -63,7 +63,7 @@ def run():
                 detection_loop_counter = 0
                 detects = get_face_boxes(net, prior_data, frame, configs.FRAME_RESIZE, cur_frame_counter)
                 time_spend_of_detection = time.time() - start_turn_with_detection
-                object_controller.update(detects, cur_frame_counter, frame)
+                object_controller.update_with_detection(detects, frame)
                 get_face_ID(configs, frame, object_controller.instances, cur_frame_counter)
                 time_spend_of_tracking = time.time() - start_turn_with_detection - time_spend_of_detection
                 print("Detecting Time: ", time_spend_of_detection * 1000, " ms.")
@@ -71,7 +71,7 @@ def run():
             else:
                 # here we needn't to detect the frame
                 start_turn_without_detection = time.time()
-                object_controller.update_without_detection(cur_frame_counter, frame)
+                object_controller.update_without_detection(frame)
                 time_spend_of_tracking = time.time() - start_turn_without_detection
                 print("Tracking Time without detection: ", time_spend_of_tracking * 1000, " ms.")
 

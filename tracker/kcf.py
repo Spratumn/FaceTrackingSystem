@@ -16,7 +16,7 @@ from tracker import kcftracker
 
 
 class KcfFilter(object):
-    def __init__(self, video_helper, frame):
+    def __init__(self):
         self.first_run = True
         self.dynamParamsSize = 6
         self.measureParamsSize = 4
@@ -32,7 +32,7 @@ class KcfFilter(object):
         xc = int(bbx[0] + w / 2)
         yc = int(bbx[2] + h / 2)
         measurement = np.array([[xc, yc, w, h]], dtype=np.float32).T
-        if self.first_run is True:
+        if self.first_run:
             self.kcf.init(measurement, frame)
             #     statePre = np.array(
             #         [measurement[0], measurement[1], [0], [0], measurement[2], measurement[3]],
@@ -40,14 +40,14 @@ class KcfFilter(object):
             # )
             # self.first_run = False   #每次检测都重新初始化框
         corrected_res = self.kcf.update(frame)  # correct(measurement).T[0]
-        self.velocity = np.array([corrected_res[2], corrected_res[3]])
+        # self.velocity = np.array([corrected_res[2], corrected_res[3]])
 
         # convert back to bbx form: x_left, x_right, y_up, y_bottom
         corrected_bbx = self.get_bbx_from_kcf_form(corrected_res)
         return corrected_bbx
 
     def get_predicted_bbx(self, frame):
-        predicted_res = self.kcf.update(frame)#.T[0]
+        predicted_res = self.kcf.update(frame)
         predicted_bbx = self.get_bbx_from_kcf_form(predicted_res)
         return predicted_bbx
 

@@ -21,7 +21,7 @@ parser.add_argument('--confidence_threshold', default=0.05, type=float, help='co
 parser.add_argument('--top_k', default=5000, type=int, help='top_k')
 parser.add_argument('--nms_threshold', default=0.3, type=float, help='nms_threshold')
 parser.add_argument('--keep_top_k', default=750, type=int, help='keep_top_k')
-parser.add_argument('-s', '--save_image', action="store_true", default=False, help='show detection results')
+parser.add_argument('-s', '--save_image', action="store_true", default=True, help='show detection results')
 parser.add_argument('--vis_thres', default=0.5, type=float, help='visualization_threshold')
 
 args = parser.parse_args()
@@ -96,7 +96,8 @@ def get_face_boxes(net, prior_data, image, resize, cur_frame_counter, device='cp
         img = cv2.resize(img, None, None, fx=resize, fy=resize, interpolation=cv2.INTER_LINEAR)
     im_height, im_width, _ = img.shape
     # print(im_height, im_width)
-    scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
+    scale = torch.from_numpy(np.array([img.shape[1], img.shape[0], img.shape[1], img.shape[0]]))
+    # scale = torch.Tensor(np.array([img.shape[1], img.shape[0], img.shape[1], img.shape[0]]))
     img -= (104, 117, 123)
     img = img.transpose(2, 0, 1)
     img = torch.from_numpy(img).unsqueeze(0)
@@ -154,7 +155,7 @@ def get_face_boxes(net, prior_data, image, resize, cur_frame_counter, device='cp
             cy = b[1] + 12
             cv2.putText(img_raw, text, (cx, cy),
                         cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 255))
-        cv2.imwrite('vis/' + str(cur_frame_counter) + '.jpg', img_raw)
+        cv2.imwrite('output/' + str(cur_frame_counter) + '.jpg', img_raw)
 
     return outputs_useful
 

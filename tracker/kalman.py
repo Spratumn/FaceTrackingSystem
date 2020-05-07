@@ -47,17 +47,6 @@ class KalmanFilter(object):
                                                     [0, 0, 0.1, 0],
                                                     [0, 0, 0, 0.1]], np.float32)
 
-    def get_predicted_bbox(self):
-        """
-        x_k+1 = F_k+1 * x_k + B_k * u_k
-        S_k+1 = F_k+1 * S_k * F_k+1^T + Q_k+1
-        :return: [left, right, top, bottom]
-        """
-        # predicted_res: [xc, yc, vx, vy, h, w]
-        predicted_res = self.kalman.predict().T[0]
-        predicted_bbox = self.get_bbox_from_kalman_form(predicted_res)
-        return predicted_bbox
-
     def correct(self, bbox):
         """
         x^hat_k+1 = x_k+1 + K^hat * (z_k+1 - H_k+1 * x_k+1)
@@ -80,6 +69,17 @@ class KalmanFilter(object):
         corrected_res = self.kalman.correct(measurement).T[0]
         corrected_bbox = self.get_bbox_from_kalman_form(corrected_res)
         return corrected_bbox
+
+    def get_predicted_bbox(self):
+        """
+        x_k+1 = F_k+1 * x_k + B_k * u_k
+        S_k+1 = F_k+1 * S_k * F_k+1^T + Q_k+1
+        :return: [left, right, top, bottom]
+        """
+        # predicted_res: [xc, yc, vx, vy, h, w]
+        predicted_res = self.kalman.predict().T[0]
+        predicted_bbox = self.get_bbox_from_kalman_form(predicted_res)
+        return predicted_bbox
 
     def get_bbox_from_kalman_form(self, kalman_form):
         """

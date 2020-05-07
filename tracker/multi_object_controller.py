@@ -14,34 +14,36 @@ from utils import util
 # https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.optimize.linear_sum_assignment.html
 
 
-class MultipleObjectController(object):
+class MultiObjectController(object):
     def __init__(self, config, video_helper):
+        # instances: 关于instance类的list
         self.instances = []
         self.instances_blob = []
         self.config = config
         self.video_helper = video_helper
 
-    def update(self, detections, frame_id, frame):
+    def update_with_detection(self, detections, frame):
+        # 用detection的结果结合tracking(prediction)的结果，更新物体运动状态
         # In this mode, we update our tracking by using detection and prediction results.
         # Specific explanations are presented with the function.
-        self.assign_detections_to_tracks(detections, frame_id, frame)
+        self.assign_detections_to_tracks(detections, frame)
 
-    def update_without_detection(self, frame_id, frame):
+    def update_without_detection(self, frame):
+        # 只prediction，没有detection辅助correction
         # In this mode, we still need to predict next tracking by using historical info
         # though we don't have the detection
-        #
         # step 1. update bbx by prediction
         for instance in self.instances:
             bbx = instance.get_predicted_bbx(frame)
             tag = instance.get_latest_record()[0]
-            instance.add_to_track_with_no_correction(tag, bbx,frame)
+            instance.add_to_track_with_no_correction(tag, bbx)
             # instance.add_to_track(tag, bbx)
             instance.num_misses += 1
 
         # step 2. remove dead bboxes
         self.remove_dead_instances()
 
-    def update_still(self, frame_id, frame):
+    def update_still(self, frame):
         # In this mode, we remain current status when we need to predict because
         # sometimes, especially for some circumstances, video quality is extremely bad.
         # It's prone to loss our tracking.
@@ -55,7 +57,7 @@ class MultipleObjectController(object):
         # step 2. remove dead bboxes
         self.remove_dead_instances()
 
-    def assign_detections_to_tracks(self, detections, frame_id, frame):
+    def assign_detections_to_tracks(self, detections, frame):
         """
         This function aims to assign detections to their corresponding tracks by minimizing the cost matrix using
         Munkres Algorithm.
@@ -63,23 +65,34 @@ class MultipleObjectController(object):
         Args:
             param 1. detections: [{'tag1' : [bbx1]}, {'tag2' : [bbx2]}, ..., {'tagn' : [bbxn]}]
                      where bbx = [bbx_left, bbx_right, bbx_up, bbx_down]
-            param 2. frame_id: current frame ID starting from 0
+            param 2. frame: current frame
         """
         """ Step 0: got measurements (detections) """
 
         """ Step 1: get predicted states """
-        # find distance from all tracked instances to all detected boxes
-        # if there are no instances, then all detections are new tracks
+        # A. no instances now: initial—>将detection的结果加入instances
         if len(self.instances) == 0:
             for det in detections:
                 # det: {'tag' : [bbx_left, bbx_right, bbx_up, bbx_bottom]}
-                instance = Instance(self.config, self.video_helper, frame)
+                instance = Instance(self.config, self.video_helper)
                 tag = list(det.keys())[0]
                 bbx = det[tag]
                 instance.add_to_track(tag, bbx, frame)
                 self.instances.append(instance)
             return True
-
+        # B. we have instances now: (prediction/track<—>detection matching)
+        #    1. predict/track—> kalman filter
+        #    2. 找到detection和prediction相互的匹配
+        #       2.a Munkres Algorithm
+        #           det:   b    e f    //       b->b       e->f f->f
+        #           pre: a b c    f    // a->b  b->b c->b       f->f
+        #           matched: b, f
+        #       2.b bi-matching: 以predict/track为基准，先匹配det；再由det为基准，匹配pre/track
+        #    3. 对于正确匹配的物体，进行更新：correction
+        #    4. 处理未正确匹配的物体
+        #       4.1 未检测到的物体：a.即时移除(不建议) b.继续更新(单纯pred/track，不考虑detection)
+        #                        c.长久未匹配，移除
+        #       4.2 检测到有新物体：a. 即时加入 b.加入track(试用期)，几帧后(通过适用期后)，加入instances
         """ Step 2: assign detections to corresponding instances """
         # iou match between detected bboxes and tracked bboxes
         track_det_iou, det_track_iou = {}, {}
@@ -110,7 +123,7 @@ class MultipleObjectController(object):
                     assigned_instances.append(match_trackid)
                     assigned_detections.append(match_detid)
 
-        """ Step 3: correct an instance if it's matched by correponsding instance and detection """
+        """ Step 3: correct an instance if it's matched by corresponding instance and detection """
         assigned_detection_id = []
         if assigned_instances is not None and assigned_detections is not None:  # sys.maxsize:
 
@@ -146,8 +159,8 @@ class MultipleObjectController(object):
                 bbx = detections[idx][tag]
                 # then we need to confirm whether the detection is a good one
                 if self.is_good_detection(bbx):
-                    instance = Instance(self.config, self.video_helper, frame)
-                    instance.add_to_track(tag, bbx,frame)
+                    instance = Instance(self.config, self.video_helper)
+                    instance.add_to_track(tag, bbx, frame)
                     self.instances.append(instance)
 
     def remove_dead_instances(self):
@@ -219,7 +232,7 @@ class MultipleObjectController(object):
                 if i == j:
                     continue
                 ins2 = self.instances[j]
-                # if we think they are identical
+                # if they are same instance
                 if util.check_instance_identical_by_iou(
                         ins1,
                         ins2,

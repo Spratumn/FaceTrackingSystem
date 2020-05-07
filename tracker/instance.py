@@ -5,7 +5,7 @@ from tracker.kalman import KalmanFilter
 
 
 class Instance(object):
-    def __init__(self, config, video_helper, frame):
+    def __init__(self, config, video_helper):
         # each history entry is an array with [frame_id, tag, bbx_left, bbx_right, bbx_up, bbx_down]
         self.history = []
         self.history_size = config.HISTORY_SIZE = 10
@@ -22,8 +22,8 @@ class Instance(object):
         self.delete_singular = False
         self.num_of_still = 0  # num of detector num
         self.filter = config.FILTER
-        self.kcf = KcfFilter(video_helper, frame)    # video_helper here can provide us the fps
-        self.kalman = KalmanFilter(video_helper)
+        self.kcf = KcfFilter()
+        self.kalman = KalmanFilter(video_helper)  # video_helper here can provide us the fps
 
         # this color is for bbx (color assigned to this instance itself）
         color = np.random.randint(0, 255, (1, 3))[0]
@@ -83,7 +83,7 @@ class Instance(object):
                 del self.history[-1]
         self.num_of_still += 1
 
-    def add_to_track_with_no_correction(self, tag, bbx, frame):
+    def add_to_track_with_no_correction(self, tag, bbx):
         new_history = [tag,
                        bbx[0], bbx[1], bbx[2], bbx[3],
                        [self.color[0], self.color[1], self.color[2]]]
@@ -125,7 +125,7 @@ class Instance(object):
     def get_ith_bbx(self, i):
         # if input i is int type
         if isinstance(i, int):
-            if (i > 0 and i < len(self.history)) or (i < 0 and -i <= len(self.history)):
+            if (0 < i < len(self.history)) or (i < 0 and -i <= len(self.history)):
                 res = self.history[i]
                 ith_bbx = [res[1], res[2], res[3], res[4]]
                 return ith_bbx
