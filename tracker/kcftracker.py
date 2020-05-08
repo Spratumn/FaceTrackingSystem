@@ -186,10 +186,10 @@ class KCFTracker:
             c = real(c)
             c = rearrange(c)
 
-        if (x1.ndim == 3 and x2.ndim == 3):
+        if x1.ndim == 3 and x2.ndim == 3:
             d = (np.sum(x1[:, :, 0] * x1[:, :, 0]) + np.sum(x2[:, :, 0] * x2[:, :, 0]) - 2.0 * c) / (
                     self.size_patch[0] * self.size_patch[1] * self.size_patch[2])
-        elif (x1.ndim == 2 and x2.ndim == 2):
+        elif x1.ndim == 2 and x2.ndim == 2:
             d = (np.sum(x1 * x1) + np.sum(x2 * x2) - 2.0 * c) / (
                     self.size_patch[0] * self.size_patch[1] * self.size_patch[2])
 

@@ -28,7 +28,7 @@ class Configs(object):
         self.BACK_RESIZE_WIDTH = 320
 
         self.USE_RE_MODEL = False
-        self.FRAME_RESIZE = 2
+        self.FRAME_RESIZE = 0.5
 
         """
         # Multiple Object Controller Parameters
@@ -41,7 +41,7 @@ class Configs(object):
         """
         # Instance Parameters
         """
-        self.FILTER = 'KCF'
+        self.FILTER = 'kalman'
         # An instance will be deleted if we cannot detected it after this number
         self.MAX_NUM_MISSING_PERMISSION = self.NUM_JUMP_FRAMES+1
         # An instance will be showed if we  detected it more than this number

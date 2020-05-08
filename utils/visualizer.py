@@ -56,7 +56,7 @@ class Visualizer(object):
                         # [tag, bbx_left, bbx_right, bbx_up, bbx_bottom, color]
                         face = instance.face_id
                         emotion = instance.emotion
-                        tag = face + '/' +  emotion
+                        tag = face + '/' + emotion
                         left = ins[1]
                         right = ins[2]
                         top = ins[3]
@@ -122,7 +122,8 @@ class Visualizer(object):
                         if self.config.SHOW_FRAME_ID:
                             # draw frame id
                             self.draw_frameid(img, str(frame_id))
-        cv2.imwrite(self.config.show_path + str(frame_id) + '.jpg', img)
+        # cv2.imwrite(self.config.show_path + str(frame_id) + '.jpg', img)
+        return img
 
     def drawing_all(self, img, instances, frame_id, is_collision, show_temporal_information):
         if len(instances) > 0:
@@ -337,6 +338,7 @@ class Visualizer(object):
                     0.45,
                     (0, 255, 0),
                     True)
+
 
 
 
